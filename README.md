@@ -37,6 +37,33 @@ ZXing (QR), Gradle, Docker.
 Eslatmani tez sinash uchun sartaroshxona sozlamalarida **Eslatma** muddatini o'zgartiring. Botni to'xtatib qayta ishga
 tushirsangiz ham suhbat holati va ma'lumotlar yo'qolmaydi (ular bazada saqlanadi).
 
+## 1.1. Test uchun tayyor (soxta) ma'lumotlar
+
+Qo'lda hamma narsani kiritib o'tirmaslik uchun bot **soxta sartaroshxonalar, sartaroshlar, narxlar, ish vaqti, yopilgan
+vaqtlar va bronlar** yaratib bera oladi. `.env` fayliga qo'shing:
+
+```
+DEMO_DATA=true
+```
+
+Bot ishga tushganda bir marta quyidagilarni yaratadi (yana ishga tushirsangiz takrorlanmaydi):
+
+- 7 ta sartaroshxona (`demo-` bilan boshlanadigan slug): jumladan ruscha nomli, bitta sartaroshli (tanlash bosqichi
+  o'tkazib yuboriladi), obunasi **o'chirilgan** ("VIP Style") va 5 tadan ko'p faol sartaroshxona (ro'yxat sahifalanishini
+  sinash uchun).
+- Har birida sartaroshlar (biri "bron qabul qilmaydi" ⛔), narxlar, haftalik ish vaqti, tanaffus, dam olish kuni.
+- **Yopilgan vaqtlar** (bugun/ertaga/indinga: qisman va butun kun) va **soxta bronlar**: o'tgan kunlar uchun
+  keldi / kelmadi / bekor qilingan (statistika uchun), bugun va keyingi kunlar uchun faol bronlar va qo'lda yozilgan bronlar.
+- `SUPER_ADMIN_IDS` dagi birinchi id egasi **"Barber House" egasi va sartarosh** bo'ladi, shuning uchun bitta akkaunt bilan
+  sartarosh va ega menyusini ham sinab ko'rish mumkin (mijoz rejimi tugmasi bilan almashing). Boshqa id uchun
+  `DEMO_STAFF_TELEGRAM_ID=...`, o'chirish uchun `DEMO_STAFF_TELEGRAM_ID=none`.
+
+Sanalar bugungi kunga nisbatan yaratiladi. Eskirganda yangilash uchun `DEMO_DATA_RESET=true` qo'ying: faqat `demo-`
+ma'lumotlari o'chirilib, qaytadan yaratiladi (sizning haqiqiy ma'lumotlaringizga tegmaydi). Soxta odamlar Telegram id'lari
+`9000000000–9000000999` oralig'ida, shuning uchun bot ularga hech qachon xabar yubormaydi.
+
+> Faqat sinov uchun. Productionda `DEMO_DATA=false` qoldiring.
+
 ## 2. Loyiha tuzilishi
 
 ```

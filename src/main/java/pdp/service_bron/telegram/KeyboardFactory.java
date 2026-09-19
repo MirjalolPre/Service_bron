@@ -128,6 +128,21 @@ public class KeyboardFactory {
                 .build();
     }
 
+    /** Keyboard for changing a shop's location: current position, remove (when set) and back. */
+    public ReplyKeyboardMarkup locationEdit(Lang lang, boolean hasLocation) {
+        List<KeyboardRow> rows = new ArrayList<>();
+        KeyboardRow locationRow = new KeyboardRow();
+        locationRow.add(KeyboardButton.builder().text(i18n.t(lang, "btn.share_location")).requestLocation(true).build());
+        rows.add(locationRow);
+        KeyboardRow actions = new KeyboardRow();
+        if (hasLocation) {
+            actions.add(KeyboardButton.builder().text(i18n.t(lang, "btn.remove_location")).build());
+        }
+        actions.add(KeyboardButton.builder().text(i18n.t(lang, "btn.back")).build());
+        rows.add(actions);
+        return ReplyKeyboardMarkup.builder().keyboard(rows).resizeKeyboard(true).oneTimeKeyboard(true).build();
+    }
+
     public ReplyKeyboardRemove removeKeyboard() {
         return ReplyKeyboardRemove.builder().removeKeyboard(true).build();
     }

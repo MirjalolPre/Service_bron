@@ -32,6 +32,7 @@ import pdp.service_bron.telegram.CallbackData;
 import pdp.service_bron.telegram.KeyboardFactory;
 import pdp.service_bron.telegram.TelegramSender;
 
+import pdp.service_bron.util.LocationParser;
 import pdp.service_bron.util.TimeFormatter;
 
 import java.time.Clock;
@@ -129,7 +130,7 @@ public class OwnerHandler implements UpdateHandler {
                 showShop(ctx, messageId, shop);
             }
             case "ed" -> askFieldEdit(ctx, shop, TextField.valueOf(data.arg(0)), messageId);
-            case "edloc" -> askLocationEdit(ctx);
+            case "edloc" -> askLocationEdit(ctx, shop);
             case "edphoto" -> askPhotoEdit(ctx, messageId);
             case "st" -> showSetting(ctx, shop, Setting.valueOf(data.arg(0)), messageId);
             case "sv" -> {
@@ -183,23 +184,52 @@ public class OwnerHandler implements UpdateHandler {
         }
     }
 
+    /**
+     * The shop position: a Telegram location (the "current position" button or a pin picked on the map through
+     * the attachment menu), a pasted map link, or typed coordinates. "-" or the remove button clears it.
+     */
     private void onLocation(BotContext ctx, Shop shop, boolean wizard) {
         Lang lang = ctx.lang();
-        Location location = ctx.message().hasLocation() ? ctx.message().getLocation() : null;
-        if (location == null) {
-            if (wizard && isSkipText(ctx)) {
+        Double latitude = null;
+        Double longitude = null;
+        if (ctx.message().hasLocation()) {
+            Location location = ctx.message().getLocation();
+            latitude = location.getLatitude();
+            longitude = location.getLongitude();
+        } else {
+            String text = ctx.text();
+            if (text != null && wizard && isSkipText(ctx)) {
                 advance(ctx, Step.LOCATION);
                 return;
             }
-            sender.send(ctx.chatId(), i18n.t(lang, "owner.send_location"));
-            return;
+            if (text != null && text.equals(i18n.t(lang, "btn.back"))) {
+                sessions.clear(ctx.telegramId());
+                sender.send(ctx.chatId(), i18n.t(lang, "owner.location.cancelled"), keyboards.removeKeyboard());
+                showShop(ctx, null, shop);
+                return;
+            }
+            if (!wizard && text != null && (text.equals("-") || text.equals(i18n.t(lang, "btn.remove_location")))) {
+                shops.updateLocation(ctx.user(), shop.getId(), null, null);
+                sessions.clear(ctx.telegramId());
+                sender.send(ctx.chatId(), i18n.t(lang, "owner.location.removed"), keyboards.removeKeyboard());
+                showShop(ctx, null, requireShop(ctx));
+                return;
+            }
+            var parsed = LocationParser.parse(text);
+            if (parsed.isEmpty()) {
+                sender.send(ctx.chatId(), i18n.t(lang, "owner.location.bad"));
+                return;
+            }
+            latitude = parsed.get().latitude();
+            longitude = parsed.get().longitude();
         }
-        shops.updateLocation(ctx.user(), shop.getId(), location.getLatitude(), location.getLongitude());
+        shops.updateLocation(ctx.user(), shop.getId(), latitude, longitude);
+        sender.send(ctx.chatId(), i18n.t(lang, "owner.location.saved"), keyboards.removeKeyboard());
+        sender.sendLocation(ctx.chatId(), latitude, longitude); // the pin lets the owner check the point on the map
         if (wizard) {
             advance(ctx, Step.LOCATION);
         } else {
             sessions.clear(ctx.telegramId());
-            sender.send(ctx.chatId(), i18n.t(lang, "owner.saved"), keyboards.removeKeyboard());
             showShop(ctx, null, requireShop(ctx));
         }
     }
@@ -406,10 +436,14 @@ public class OwnerHandler implements UpdateHandler {
                 keyboards.rows().row(keyboards.back(lang, cb("shop"))).build());
     }
 
-    private void askLocationEdit(BotContext ctx) {
+    private void askLocationEdit(BotContext ctx, Shop shop) {
         Lang lang = ctx.lang();
         sessions.set(ctx.telegramId(), BotState.O_LOCATION);
-        sender.send(ctx.chatId(), i18n.t(lang, "owner.wiz.location"), keyboards.locationRequest(lang, false));
+        if (shop.hasLocation()) {
+            sender.send(ctx.chatId(), i18n.t(lang, "owner.location.current"));
+            sender.sendLocation(ctx.chatId(), shop.getLatitude(), shop.getLongitude());
+        }
+        sender.send(ctx.chatId(), i18n.t(lang, "owner.location.ask"), keyboards.locationEdit(lang, shop.hasLocation()));
     }
 
     private void askPhotoEdit(BotContext ctx, Integer messageId) {

@@ -15,6 +15,7 @@ import org.telegram.telegrambots.meta.api.objects.Contact;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.api.objects.User;
 import org.telegram.telegrambots.meta.api.objects.chat.Chat;
+import org.telegram.telegrambots.meta.api.objects.location.Location;
 import org.telegram.telegrambots.meta.api.objects.message.Message;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardButton;
@@ -132,6 +133,14 @@ class BotFlowIT {
         contact.setUserId(tg);
         contact.setFirstName("User" + tg);
         m.setContact(contact);
+        dispatch(m);
+    }
+
+    private void sendLocation(long tg, double latitude, double longitude) {
+        Message m = message(messageIds.incrementAndGet());
+        m.setFrom(new User(tg, "User" + tg, false));
+        m.setChat(new Chat(tg, "private"));
+        m.setLocation(Location.builder().latitude(latitude).longitude(longitude).build());
         dispatch(m);
     }
 
@@ -333,6 +342,52 @@ class BotFlowIT {
         sendText(CLIENT, "/start");
         pressLabel(CLIENT, i18n.t(Lang.RU, "btn.lang.ru"));
         assertThat(lastTextFor(CLIENT)).isEqualTo(i18n.t(Lang.RU, "phone.ask"));
+    }
+
+    @Test
+    void ownerSetsTheShopLocationFromAMapPinALinkOrCoordinates() {
+        onboard(ADMIN, null);
+        sendText(ADMIN, "/admin");
+        pressLabel(ADMIN, t("admin.btn.new"));
+        sendText(ADMIN, "Barber House");
+        Matcher link = Pattern.compile("start=(o_[A-Za-z0-9_-]+)").matcher(lastTextFor(ADMIN) + textsFor(ADMIN));
+        assertThat(link.find()).isTrue();
+        onboard(OWNER, link.group(1));
+
+        // Setup wizard: the location step accepts a pin picked on the map.
+        pressLabel(OWNER, t("owner.btn.keep_name"));
+        sendText(OWNER, "Chilonzor");
+        pressLabel(OWNER, t("btn.skip"));
+        assertThat(lastTextFor(OWNER)).isEqualTo(t("owner.wiz.location"));
+        sendLocation(OWNER, 41.2856, 69.2036);
+        Shop shop = shops.findAll().getFirst();
+        assertThat(shop.getLatitude()).isEqualTo(41.2856);
+        assertThat(shop.getLongitude()).isEqualTo(69.2036);
+        pressLabel(OWNER, t("owner.btn.my_phone"));
+        pressLabel(OWNER, t("btn.skip"));
+        pressLabel(OWNER, t("btn.no"));
+
+        // Later: change it with a Yandex link (longitude first in the link, still saved correctly).
+        sendText(OWNER, t("menu.o.shop"));
+        pressData(OWNER, "o:edloc");
+        assertThat(anyTextContains(OWNER, t("owner.location.current"))).isTrue();
+        sendText(OWNER, "https://yandex.uz/maps/?ll=69.30%2C41.31&z=17");
+        shop = shops.findById(shop.getId()).orElseThrow();
+        assertThat(shop.getLatitude()).isEqualTo(41.31);
+        assertThat(shop.getLongitude()).isEqualTo(69.30);
+
+        // Typed coordinates work, nonsense is refused and keeps waiting.
+        pressData(OWNER, "o:edloc");
+        sendText(OWNER, "not a place");
+        assertThat(lastTextFor(OWNER)).isEqualTo(t("owner.location.bad"));
+        sendText(OWNER, "41.2, 69.1");
+        assertThat(shops.findById(shop.getId()).orElseThrow().getLatitude()).isEqualTo(41.2);
+
+        // The location can be removed again.
+        pressData(OWNER, "o:edloc");
+        sendText(OWNER, t("btn.remove_location"));
+        assertThat(shops.findById(shop.getId()).orElseThrow().hasLocation()).isFalse();
+        assertThat(sent.stream().map(Sent::text)).noneMatch(text -> t("error.generic").equals(text));
     }
 
     @Test
