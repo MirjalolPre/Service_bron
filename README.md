@@ -18,7 +18,7 @@ ZXing (QR), Gradle, Docker.
 
 
 
-## 4. Sinov stsenariysi (ikkita Telegram akkaunt kerak)
+## 1. Sinov stsenariysi (ikkita Telegram akkaunt kerak)
 
 1. **Super admin** akkauntida botni oching: `/start` → til → telefon raqamni yuboring. So'ng `/admin` →
    **➕ Yangi sartaroshxona** → nomini yozing. Bot **egasi uchun havola** beradi (`https://t.me/<bot>?start=o_...`).
@@ -37,7 +37,7 @@ ZXing (QR), Gradle, Docker.
 Eslatmani tez sinash uchun sartaroshxona sozlamalarida **Eslatma** muddatini o'zgartiring. Botni to'xtatib qayta ishga
 tushirsangiz ham suhbat holati va ma'lumotlar yo'qolmaydi (ular bazada saqlanadi).
 
-## 5. Loyiha tuzilishi
+## 2. Loyiha tuzilishi
 
 ```
 src/main/java/pdp/service_bron/
@@ -85,7 +85,7 @@ flowchart LR
 - Foydalanuvchi matnlari HTML-escape qilinadi. Telefon raqamlar loglarda maskalanadi (`+99890***4567`).
 - Java kodida foydalanuvchiga ko'rinadigan matn yo'q: hammasi `messages_*.properties` da.
 
-## 6. Testlar va CI
+## 3. Testlar va CI
 
 ```bash
 ./gradlew build          # kompilyatsiya + barcha testlar (Docker ishlab turishi kerak: Testcontainers PostgreSQL)
@@ -96,7 +96,7 @@ flowchart LR
   takliflar, sessiya, hamda botning to'liq stsenariysi (`BotFlowIT`).
 - GitHub Actions: `.github/workflows/ci.yml` har push va pull request'da `./gradlew build` ni ishga tushiradi.
 
-## 7. Muammolarni hal qilish
+## 4. Muammolarni hal qilish
 
 | Belgi | Sabab va yechim |
 |---|---|
