@@ -15,62 +15,8 @@ ZXing (QR), Gradle, Docker.
 
 ---
 
-## 1. Telegram bot tokenini olish (@BotFather)
 
-1. Telegramda [@BotFather](https://t.me/BotFather) ni oching.
-2. `/newbot` yuboring, bot nomini va **username**ni kiriting (oxiri `bot` bilan tugashi kerak, masalan `navbat_uz_bot`).
-3. BotFather sizga **token** beradi: `123456789:AAH...`. Uni hech kimga bermang va GitHub'ga yuklamang.
-4. (Ixtiyoriy) `/setdescription`, `/setuserpic` orqali bot tavsifi va rasmini qo'ying. Buyruqlar menyusini bot o'zi o'rnatadi.
 
-## 2. `.env` faylini to'ldirish
-
-```bash
-cp .env.example .env
-```
-
-`.env` faylida:
-
-```
-TELEGRAM_BOT_TOKEN=123456789:AAH...        # BotFather bergan token (majburiy)
-TELEGRAM_BOT_USERNAME=navbat_uz_bot        # @ belgisisiz (bo'sh qoldirsangiz, Telegramdan avtomatik olinadi)
-SUPER_ADMIN_IDS=123456789                  # o'zingizning Telegram id'ingiz, vergul bilan bir nechta bo'lishi mumkin
-APP_DEFAULT_TIMEZONE=Asia/Tashkent
-```
-
-> `.env` faylida izohni **alohida qatorga** yozing (`# ...`). Qiymat oxiriga yozilgan izoh qiymatning bir qismi bo'lib qoladi.
-
-**Telegram id'ingizni bilish:** Telegramda [@userinfobot](https://t.me/userinfobot) ga `/start` yuboring — u sizning `Id` raqamingizni
-ko'rsatadi. Shu raqamni `SUPER_ADMIN_IDS` ga yozing.
-
-`.env` fayli `.gitignore` da, u hech qachon commit qilinmaydi. Token bo'sh bo'lsa, dastur aniq xabar bilan ishga tushmaydi.
-
-## 3. Ishga tushirish
-
-### Dasturlash (development)
-
-1. **Docker Desktop** ni ishga tushiring (PostgreSQL konteyneri uchun).
-2. IntelliJ IDEA'da `ServiceBronApplication` ni ishga tushiring **yoki** terminalda:
-
-   ```bash
-   ./gradlew bootRun
-   ```
-
-Spring Boot Docker Compose qo'llab-quvvatlashi `compose.yaml` dagi `postgres:16` ni o'zi ishga tushiradi va ulanishni
-sozlaydi. Konteyner har qayta ishga tushirishda to'xtatilmaydi (`start-only`), ma'lumotlar `navbat-db` volume'ida saqlanadi.
-
-> Gradle JDK 21 talab qiladi. Kompyuteringizda bo'lmasa, Gradle uni avtomatik yuklab oladi (`./gradlew -q javaToolchains`
-> bilan tekshirish mumkin).
-
-### Production
-
-```bash
-cp .env.example .env      # tokenni to'ldiring; ixtiyoriy: POSTGRES_PASSWORD=...
-docker compose -f compose.prod.yaml up -d --build
-docker compose -f compose.prod.yaml logs -f app
-```
-
-`compose.prod.yaml` ikkita servisni ishga tushiradi: `app` (bot) va `db` (PostgreSQL). Bot long polling ishlatadi, shuning
-uchun domen yoki HTTPS kerak emas.
 
 ## 4. Sinov stsenariysi (ikkita Telegram akkaunt kerak)
 
