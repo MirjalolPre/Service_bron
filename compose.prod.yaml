@@ -1,0 +1,37 @@
+# Production: the bot + PostgreSQL.
+#   docker compose -f compose.prod.yaml up -d --build
+# Secrets come from the .env file next to this file (see .env.example).
+services:
+  app:
+    build: .
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN:?Set TELEGRAM_BOT_TOKEN in .env}
+      TELEGRAM_BOT_USERNAME: ${TELEGRAM_BOT_USERNAME:-}
+      SUPER_ADMIN_IDS: ${SUPER_ADMIN_IDS:-}
+      APP_DEFAULT_TIMEZONE: ${APP_DEFAULT_TIMEZONE:-Asia/Tashkent}
+      SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/navbat
+      SPRING_DATASOURCE_USERNAME: navbat
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-navbat}
+      SPRING_DOCKER_COMPOSE_ENABLED: "false"
+
+  db:
+    image: postgres:16
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: navbat
+      POSTGRES_USER: navbat
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-navbat}
+    volumes:
+      - navbat-db:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U navbat -d navbat"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+volumes:
+  navbat-db:

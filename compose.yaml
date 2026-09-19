@@ -1,0 +1,21 @@
+# Development database only. Spring Boot Docker Compose support starts it
+# automatically and configures the datasource. Do NOT add the app here.
+services:
+  db:
+    image: postgres:16
+    environment:
+      POSTGRES_DB: navbat
+      POSTGRES_USER: navbat
+      POSTGRES_PASSWORD: navbat
+    ports:
+      - "5432"
+    volumes:
+      - navbat-db:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U navbat -d navbat"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+volumes:
+  navbat-db:
